@@ -39,7 +39,7 @@ class Simulator:
             else:
                 yield self.get_random_speed_upgrade() # rolled 2, 3, 4 speed
 
-    def try_until(self, speed, slot):
+    def try_until(self, required_speed, slot):
         counter = 0
         counter_no_speed = 0
         counter_insufficient_speed = 0
@@ -73,7 +73,7 @@ class Simulator:
                 # print("Reforge value: %s" % reforge[speed_roll_count])
                 # print("\n")
 
-                if total_speed >= speed - reforge[speed_roll_count]: # reforge, presumed to gain 3
+                if total_speed + reforge[speed_roll_count] >= required_speed:
                     return (counter, counter_no_speed, counter_insufficient_speed, total_speed + reforge[speed_roll_count])
                 else:
                     counter_insufficient_speed += 1
@@ -104,9 +104,9 @@ class Simulator:
                 
                 total_speed_acquired += speed        
                 
-                # print("[Slot: %s] Total item count %s, items without speed: %s, items with insufficient speed: %s, speed: %s" % (slot, item_count, item_counter_no_speed, item_counter_insufficient_speed, speed))
+                print("[Slot: %s] Total item count %s, items without speed: %s, items with insufficient speed: %s, speed: %s" % (slot, item_count, item_counter_no_speed, item_counter_insufficient_speed, speed))
                 
-            # print("Total tries required: %s" % total_item_count)  
+            print("Total tries required: %s" % total_item_count)  
 
             tries_until.append(total_item_count - total_item_no_speed) # exclude non speed items from the total count, we are upgrading only
         
@@ -118,22 +118,21 @@ class Simulator:
 if __name__ == "__main__":
     sim = Simulator()
     
+    
     # How Long does it take to craft x of speed y for slot z
-    speed = 20
-    count = 1
-    slot = 4
+    count = 1 # nr of items to craft (craft until [count] of speed [x] is reached)
+    
+    for slot in [0,1,4]:
+        for speed in range(18, 26):
+            total_tries = 0
+            total_tries_speed_base = 0
 
-    total_tries = 0
-    total_tries_speed_base = 0
+            for x in range(count):
+                tries_needed, counter_no_speed, _, _= sim.try_until(speed, slot)
+                total_tries += tries_needed
+                total_tries_speed_base += tries_needed - counter_no_speed
 
-    for x in range(count):
-        tries_needed, counter_no_speed, _, _= sim.try_until(speed, slot)
-        total_tries += tries_needed
-        total_tries_speed_base += tries_needed - counter_no_speed
-
-    print("It took %s acquired epics of which %s had speed to craft %s of slot %s with speed %s" % (total_tries, total_tries_speed_base, count, slot, speed))
+            print("It took %s acquired epics of which %s had speed to craft %s of slot %s with speed %s" % (total_tries, total_tries_speed_base, count, slot, speed))
     
     # gear x rans to y speed        
-    sim.gear_ran(10000, 315)
-
-
+    # sim.gear_ran(1, 315)
